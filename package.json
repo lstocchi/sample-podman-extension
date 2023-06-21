@@ -1,0 +1,301 @@
+{
+  "name": "sample-podman-extension",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/extension.js",
+  "displayName": "Sample Podman Extension",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rollup --bundleConfigAsCjs --config rollup.config.js --compact --environment BUILD:production"
+  },
+  "engines": {
+    "podman-desktop": "latest"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@podman-desktop/api": "latest",
+    "@rollup/plugin-commonjs": "^24.0.1",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@types/node": "^18.14.6",
+    "hasha": "^5.2.2",
+    "rollup": "^3.18.0",
+    "tslib": "^2.5.0",
+    "typescript": "latest"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "sample-podman-extension.onboarding.checkPodmanRequirements",
+        "title": "Sample: Check requirements before installing sample"
+      },
+      {
+        "command": "sample-podman-extension.onboarding.recheckPodmanRequirements",
+        "title": "Sample: Recheck requirements before installing sample"
+      },
+      {
+        "command": "sample-podman-extension.onboarding.installKubernetes",
+        "title": "Sample: Install Kubernetes"
+      },
+      {
+        "command": "sample-podman-extension.onboarding.installPodman",
+        "title": "Sample: Install Podman"
+      }
+    ],
+    "onboarding": {
+      "title": "Get started with Sample extension",
+      "image": "",
+      "description": "",
+      "steps": [
+        {
+          "id": "sampleSetup",
+          "title": "Sample Install",
+          "isSkippable": false,
+          "order": 1,
+          "commands": [
+            {
+              "id": "checkPodmanRequirements",
+              "command": "sample-podman-extension.onboarding.checkPodmanRequirements",
+              "response": {
+                "status": "string",
+                "body": {
+                  "warningsMarkdown": "string"
+                }
+              }
+            },
+            {
+              "id": "recheckPodmanRequirements",
+              "command": "sample-podman-extension.onboarding.recheckPodmanRequirements",
+              "response": {
+                "status": "string",
+                "body": {
+                  "warningsMarkdown": "string"
+                }
+              }
+            },
+            {
+              "id": "installPodman",
+              "command": "sample-podman-extension.onboarding.installPodman",
+              "response": {
+                "status": "string"
+              }
+            }
+          ],
+          "views": [
+            {
+              "id": "checkRequirementSubstep",
+              "title": "Checking for system requirements to install Podman",
+              "media": {
+                "path": "media/onboarding/podman-logo.png",
+                "altText": "sample setup"
+              },
+              "order": 1,
+              "commandAtActivation": [
+                {
+                  "command": "checkPodmanRequirements",
+                  "order": 1                  
+                }
+              ],
+              "completionEvents": [
+                "onCommandResult:checkPodmanRequirements"
+              ]
+            },
+            {
+              "id": "missingRequirementSubstep",
+              "title": "Some system requirements are missing",
+              "media": {
+                "path": "media/onboarding/podman-logo.png",
+                "altText": "sample setup"
+              },
+              "order": 2,
+              "when": "onCommandResult:checkPodmanRequirements.status.failed",
+              "completionEvents": [
+                "onCommandResult:recheckPodmanRequirements.status.ok"
+              ],
+              "content": [
+                {
+                  "row": 1,
+                  "items": [
+                    {
+                      "value": "onCommandResult:checkPodmanRequirements.body.warningsMarkdown",
+                      "style": [
+                        "bg_charcoal_600"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "row": 2,
+                  "items": [
+                    {
+                      "value": "When possible, we've provided information on how to address these requirements."
+                    }
+                  ]
+                },
+                {
+                  "row": 3,
+                  "items": [
+                    {
+                      "label": "Check requirements again",
+                      "value": "onCommand:recheckPodmanRequirements",
+                      "component": "button"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "installPodman",
+              "title": "Installing Podman",
+              "description": "Once installed, we will enable and configure the extension",
+              "media": {
+                "path": "media/onboarding/podman-logo.png",
+                "altText": "sample setup"
+              },
+              "order": 3,
+              "commandAtActivation": [
+                {
+                  "command": "installPodman",
+                  "order": 1                  
+                }
+              ],
+              "completionEvents": [
+                "onCommandResult:installPodman"
+              ]
+            },
+            {
+              "id": "podmanInstalled",
+              "title": "Podman successfully installed",
+              "media": {
+                "path": "media/onboarding/podman-logo.png",
+                "altText": "sample setup"
+              },
+              "order": 4,
+              "when": "onCommandResult:installPodman.status.ok"
+            },
+            {
+              "id": "podmanFailedInstallation",
+              "title": "Failed installing Podman",
+              "media": {
+                "path": "media/onboarding/podman-logo.png",
+                "altText": "sample setup"
+              },
+              "order": 4,
+              "when": "onCommandResult:installPodman.status.failed"
+            }
+          ]
+        },
+        {
+          "id": "sampleChoiceSetup",
+          "title": "Sample selection",
+          "isSkippable": true,
+          "order": 2,
+          "commands": [
+            {
+              "id": "installKubernetes",
+              "command": "sample-podman-extension.onboarding.installKubernetes",
+              "args": [
+                "onRadioSelected:sampleChoiceSetup.kubernetesSetup.k8s_options.id"
+              ],
+              "response": {
+                "status": "string"
+              }
+            }
+          ],
+          "views": [
+            {
+              "id": "kubernetesSetup",
+              "title": "kubernetes Setup",
+              "description": "Select the Kubernetes extensions you would like to install and configure below:",
+              "media": {
+                "path": "media/onboarding/k8s-logo.png",
+                "altText": "k8s logo"
+              },
+              "content": [
+                {
+                  "row": 1,
+                  "items": [
+                    {
+                      "id": "k8s_options",
+                      "component": "radiogroup",
+                      "options": [
+                        {
+                          "id": "kind_opt",
+                          "title": "Kind",
+                          "subtitle": "Experimental support",
+                          "media": {
+                            "path": "media/onboarding/kind-logo.png",
+                            "altText": "k8s logo"
+                          },
+                          "body": "Run a local Kubernetes cluster using containers as nodes. Useful for local development and testing Kubernetes.",
+                          "checkbox": "Set up Kind now",
+                          "component": "checkbox_card"
+                        },
+                        {
+                          "id": "ocp_opt",
+                          "title": "OpenShift Local",
+                          "subtitle": "Podman preset",
+                          "media": {
+                            "path": "media/onboarding/sandbox-logo.png",
+                            "altText": "k8s logo"
+                          },
+                          "body": "Run a local Red Hat OpenShift environment, providing all the tools needed for container-based application development.",
+                          "checkbox": "Set up OpenShift Local now",
+                          "component": "checkbox_card"
+                        },
+                        {
+                          "id": "sand_opt",
+                          "title": "Developer Sandbox",
+                          "media": {
+                            "path": "media/onboarding/sandbox-logo.png",
+                            "altText": "k8s logo"
+                          },
+                          "body": "Free remote OpenShift sandbox environment: quickest way to get started and explore everything Red Hat OpenShift has to offer.",
+                          "checkbox": "Set up Developer Sandbox now",
+                          "component": "checkbox_card"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "enableCompletionEvents": [
+                "onRadioSelected:k8s_options"
+              ],
+              "order": 1
+            },
+            {
+              "id": "kubernetesInstall",
+              "title": "onRadioSelected:sampleChoiceSetup.kubernetesSetup.k8s_options.title Install",
+              "media": {
+                "path": "media/onboarding/k8s-logo.png",
+                "altText": "k8s logo"
+              },
+              "commandAtActivation": [
+                {
+                  "command": "installKubernetes",
+                  "order": 1                  
+                }
+              ],
+              "completionEvents": [
+                "onCommandResult:installKubernetes"
+              ],
+              "order": 2
+            },
+            {
+              "id": "kubernetesInstalled",
+              "title": "kubernetes Installed",
+              "media": {
+                "path": "media/onboarding/k8s-logo.png",
+                "altText": "k8s logo"
+              },
+              "order": 3
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
